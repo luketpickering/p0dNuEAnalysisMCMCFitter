@@ -12,7 +12,6 @@
 
 #include "T2KReWeight/WeightEngines/NEUT/T2KNEUTUtils.h"
 #include "T2KReWeight/WeightEngines/T2KReWeightFactory.h"
-#include "T2KReWeight/Utils/WeightsStorer.h"
 #include "T2KReWeight/WeightEngines/T2KReWeightEvent.h"
 
 
@@ -34,8 +33,6 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  t2krew::WeightsStorer *storer =
-      new t2krew::WeightsStorer("testweights.root"); // forweightstorer
   //	std::ofstream fout("storeweight2.txt");
 
   std::cout << "start to reweight events in file " << inputfile << std::endl;
@@ -390,12 +387,6 @@ int main(int argc, char *argv[]) {
           // for (int jp = 0; jp < (int)SystParams.size(); jp++)
           //   rw.Systematics().SetTwkDial(SystParams[jp], 0);
           T2KRW->Reset();
-          //LP: This is awful and clunky but I really don't understand how the weight
-          // storer works...
-          std::map<std::string, double> pvals;
-          for(auto &p : SystParams){
-            pvals[T2KRW->DialAsString(p)] = T2KRW->GetDial_To_Value(p);
-          }
 
           // end of reset
           t2krew::T2KSyst_t tweakParam = SystParams[ipara];
@@ -419,11 +410,6 @@ int main(int argc, char *argv[]) {
               T2KRW->Reconfigure();
             }
 
-            param_val = T2KRW->GetDial_To_Value(tweakParam);
-            pvals[T2KRW->DialAsString(tweakParam)] = param_val;
-
-
-            storer->NewSystSet(pvals);
             weight = T2KRW->CalcWeight(t2krew::Event::Make(vtx)); //(basevtx);
             // if(std::abs(reacCode)>10&&std::abs(reacCode)<14)
             //						if((std::abs(reacCode)>10&&std::abs(reacCode)<14)||std::abs(reacCode)==1)
@@ -433,7 +419,6 @@ int main(int argc, char *argv[]) {
             // with weight = "<<weight<<std::endl; 						fout<<"
             // weight:
             //"<<weight<<std::endl;
-            storer->AddWeight(weight);
             param_graphs[ipara]->SetPoint(
                 itweak,
                 param_val,
@@ -446,7 +431,6 @@ int main(int argc, char *argv[]) {
   }   // end of loop over events
 
   foutput->Write();
-  storer->SaveToFile();
 
   return 0;
 }
